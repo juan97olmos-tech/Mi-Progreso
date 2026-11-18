@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mi Progreso</title>
+    <link rel="manifest" href="./manifest.json">
+    <meta name="theme-color" content="#121212">
+    <style>
+        * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body {
+            background-color: #121212;
+            color: #ffffff;
+            margin: 0;
+            padding: 15px;
+            display: flex;
+            justify-content: center;
+        }
+        .app-container {
+            width: 100%;
+            max-width: 450px;
+            background-color: #1e1e1e;
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.5);
+        }
+        .header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        h1 { font-size: 1.4rem; margin: 0; }
+        .date-badge {
+            background-color: #2c2c2c;
+            color: #38bdf8;
+            padding: 5px 10px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            font-weight: bold;
+        }
+        .progress-box {
+            background-color: #262626;
+            border-radius: 15px;
+            padding: 15px;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        .percentage-text { font-size: 2.2rem; font-weight: bold; color: #38bdf8; }
+        .progress-bar-bg {
+            width: 100%;
+            height: 12px;
+            background-color: #444;
+            border-radius: 10px;
+            margin-top: 8px;
+            overflow: hidden;
+        }
+        .progress-bar-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #38bdf8, #25D366);
+            transition: width 0.3s ease;
+        }
+        .chart-box {
+            background-color: #262626;
+            border-radius: 15px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        .chart-title {
+            font-size: 0.9rem;
+            color: #bbb;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+        }
+        .chart-bars {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            height: 110px;
+            padding-top: 15px;
+            border-bottom: 1px solid #444;
+        }
+        .bar-col {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 12%;
+            height: 100%;
+            justify-content: flex-end;
+        }
+        .bar-percent-label {
+            font-size: 0.65rem;
+            color: #aaa;
+            margin-bottom: 4px;
+        }
+        .bar-track {
+            width: 100%;
+            height: 75px;
+            background-color: #333;
+            border-radius: 6px 6px 0 0;
+            display: flex;
+            align-items: flex-end;
+            overflow: hidden;
+        }
+        .bar-fill {
+            width: 100%;
+            height: 0%;
+            background-color: #38bdf8;
+            transition: height 0.4s ease;
+            border-radius: 6px 6px 0 0;
+        }
+        .bar-col.today .bar-fill {
+            background: linear-gradient(180deg, #25D366, #38bdf8);
+        }
+        .bar-day-label {
+            font-size: 0.75rem;
+            margin-top: 6px;
+            color: #888;
+            font-weight: bold;
+        }
+        .bar-col.today .bar-day-label {
+            color: #25D366;
+        }
+        .add-form {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 20px;
+            background-color: #262626;
+            padding: 12px;
+            border-radius: 12px;
+        }
+        .form-row {
+            display: flex;
+            gap: 8px;
+            width: 100%;
+        }
+        input, select, button {
+            padding: 10px;
+            border-radius: 8px;
+            border: none;
+            font-size: 0.9rem;
+        }
+        input { 
+            width: 100%;
+            background-color: #333; 
+            color: white; 
+            margin-bottom: 4px;
+        }
+        select { 
+            flex: 1; 
+            width: 50%;
+            min-width: 0;
+            background-color: #333; 
+            color: white; 
+        }
+        button.add-btn {
+            background-color: #38bdf8;
+            color: #000;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 4px;
+        }
+        .task-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 10px; }
+        .task-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 15px;
+            border-radius: 12px;
+            color: #111;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.1s ease, opacity 0.2s ease;
+        }
+        .task-item:active { transform: scale(0.98); }
+        .cat-celeste { background-color: #7dd3fc; border-left: 6px solid #0284c7; }
+        .cat-verde   { background-color: #25D366; border-left: 6px solid #128C7E; }
+        .cat-amarillo{ background-color: #fde047; border-left: 6px solid #ca8a04; }
+        .task-left { display: flex; align-items: center; gap: 12px; overflow: hidden; }
+        .task-item input[type="checkbox"] { width: 20px; height: 20px; cursor: pointer; flex-shrink: 0; }
+        .completed { opacity: 0.5; text-decoration: line-through; }
+        .delete-btn {
+            background: rgba(0,0,0,0.15);
+            color: #111;
+            border: none;
+            border-radius: 6px;
+            padding: 4px 8px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+        .reset-day-btn {
+            width: 100%;
+            margin-top: 20px;
+            background-color: #2c2c2c;
+            color: #aaa;
+            font-size: 0.85rem;
+            cursor: pointer;
+            border: none;
+            padding: 10px;
+            border-radius: 8px;
+        }
+        .reset-day-btn:hover { background-color: #383838; color: #fff; }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <div class="header-row">
+        <h1>Mi Progreso</h1>
+        <span class="date-badge" id="todayLabel">Hoy</span>
+    </div>
+
+    <div class="progress-box">
+        <div class="percentage-text" id="percentText">0%</div>
+        <div style="font-size: 0.85rem; color: #aaa;">Completado hoy</div>
+        <div class="progress-bar-bg">
+            <div class="progress-bar-fill" id="progressFill"></div>
+        </div>
+    </div>
+
+    <div class="chart-box">
+        <div class="chart-title">
+            <span>Historial Semanal</span>
+            <span style="color: #25D366; font-size: 0.8rem;">Lun - Dom</span>
+        </div>
+        <div class="chart-bars" id="weeklyChart"></div>
+    </div>
+
+    <div class="add-form">
+        <input type="text" id="taskInput" placeholder="Nombre de la tarea o proyecto...">
+        <div class="form-row">
+            <select id="categorySelect">
+                <option value="celeste">🔵 Cotidianidad</option>
+                <option value="verde">🟢 Ocio</option>
+                <option value="amarillo">🟡 Proyecto</option>
+            </select>
+            <select id="daySelect">
+                <option value="all">📅 Todos</option>
+                <option value="0">Lunes</option>
+                <option value="1">Martes</option>
+                <option value="2">Miércoles</option>
+                <option value="3">Jueves</option>
+                <option value="4">Viernes</option>
+                <option value="5">Sábado</option>
+                <option value="6">Domingo</option>
+            </select>
+        </div>
+        <button class="add-btn" onclick="addTask()">+ Programar / Agregar Tarea</button>
+    </div>
+
+    <ul class="task-list" id="taskList"></ul>
+
+    <button class="reset-day-btn" onclick="manualNewDay()">↻ Desmarcar casillas para nuevo día</button>
+</div>
+
+<script>
+    const daysNames = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];
+    function getTodayIndex() {
+        const jsDay = new Date().getDay();
+        return jsDay === 0 ? 6 : jsDay - 1;
+    }
+    function getTodayDateString() {
+        return new Date().toLocaleDateString('es-CL');
+    }
+    const defaultTasks = [
+        { text: "Beber un vaso de agua al levantarme", category: "celeste", day: "all", done: false },
+        { text: "Hacer la cama", category: "celeste", day: "all", done: false },
+        { text: "Limpiar la arena del gato", category: "celeste", day: "all", done: false },
+        { text: "Preparar comida de las mascotas", category: "celeste", day: "all", done: false },
+        { text: "Avanzar en proyecto pendiente", category: "amarillo", day: "all", done: false },
+        { text: "Tiempo libre / Ocio", category: "verde", day: "all", done: false }
+    ];
+    let tasks = defaultTasks;
+    let weeklyHistory = [0, 0, 0, 0, 0, 0, 0];
+    let lastSavedDate = getTodayDateString();
+
+    try {
+        if (localStorage.getItem('misTareasV6')) tasks = JSON.parse(localStorage.getItem('misTareasV6'));
+        if (localStorage.getItem('historialSemanalV6')) weeklyHistory = JSON.parse(localStorage.getItem('historialSemanalV6'));
+        if (localStorage.getItem('ultimaFechaV6')) lastSavedDate = localStorage.getItem('ultimaFechaV6');
+    } catch (e) {}
+
+    const todayIdx = getTodayIndex();
+    if (lastSavedDate !== getTodayDateString()) {
+        if (todayIdx === 0) weeklyHistory = [0, 0, 0, 0, 0, 0, 0];
+        tasks = tasks.map(t => ({ ...t, done: false }));
+        lastSavedDate = getTodayDateString();
+        try { localStorage.setItem('ultimaFechaV6', lastSavedDate); } catch(e) {}
+    }
+    document.getElementById('todayLabel').innerText = `${daysNames[todayIdx]} ${getTodayDateString()}`;
+
+    function saveAndRender() {
+        try {
+            localStorage.setItem('misTareasV6', JSON.stringify(tasks));
+            localStorage.setItem('historialSemanalV6', JSON.stringify(weeklyHistory));
+            localStorage.setItem('ultimaFechaV6', getTodayDateString());
+        } catch (e) {}
+        renderTasks();
+    }
+
+    function renderTasks() {
+        const list = document.getElementById('taskList');
+        list.innerHTML = '';
+        tasks.forEach((task, index) => {
+            if (task.day !== 'all' && parseInt(task.day) !== todayIdx) return;
+            const li = document.createElement('li');
+            li.className = `task-item cat-${task.category} ${task.done ? 'completed' : ''}`;
+            li.onclick = (e) => {
+                if (e.target.tagName !== 'BUTTON') toggleTask(index);
+            };
+            let dayBadge = task.day === 'all' ? '' : ` <span style="font-size:0.75rem; background:rgba(0,0,0,0.2); padding:2px 6px; border-radius:4px;">[${daysNames[task.day]}]</span>`;
+            li.innerHTML = `
+                <div class="task-left">
+                    <input type="checkbox" ${task.done ? 'checked' : ''}>
+                    <span>${task.text}${dayBadge}</span>
+                </div>
+                <button class="delete-btn" onclick="deleteTask(${index})">✕</button>
+            `;
+            list.appendChild(li);
+        });
+        updateProgressAndChart();
+    }
+
+    function toggleTask(index) {
+        tasks[index].done = !tasks[index].done;
+        saveAndRender();
+    }
+
+    function addTask() {
+        const input = document.getElementById('taskInput');
+        const category = document.getElementById('categorySelect').value;
+        const day = document.getElementById('daySelect').value;
+        const text = input.value.trim();
+        if (text === '') return;
+        tasks.push({ text: text, category: category, day: day, done: false });
+        input.value = '';
+        saveAndRender();
+    }
+
+    function deleteTask(index) {
+        tasks.splice(index, 1);
+        saveAndRender();
+    }
+
+    function manualNewDay() {
+        tasks = tasks.map(t => ({ ...t, done: false }));
+        saveAndRender();
+    }
+
+    function updateProgressAndChart() {
+        const activeTasksForToday = tasks.filter(t => t.day === 'all' || parseInt(t.day) === todayIdx);
+        const total = activeTasksForToday.length;
+        const completed = activeTasksForToday.filter(t => t.done).length;
+        const percent = total === 0 ? 0 : Math.round((completed / total) * 100);
+        document.getElementById('percentText').innerText = percent + '%';
+        document.getElementById('progressFill').style.width = percent + '%';
+        weeklyHistory[todayIdx] = percent;
+        try { localStorage.setItem('historialSemanalV6', JSON.stringify(weeklyHistory)); } catch(e) {}
+        renderChart(todayIdx);
+    }
+
+    function renderChart(todayIdx) {
+        const chartContainer = document.getElementById('weeklyChart');
+        chartContainer.innerHTML = '';
+        daysNames.forEach((day, idx) => {
+            const val = weeklyHistory[idx] || 0;
+            const isToday = idx === todayIdx;
+            const col = document.createElement('div');
+            col.className = `bar-col ${isToday ? 'today' : ''}`;
+            col.innerHTML = `
+                <span class="bar-percent-label">${val}%</span>
+                <div class="bar-track">
+                    <div class="bar-fill" style="height: ${val}%;"></div>
+                </div>
+                <span class="bar-day-label">${day}</span>
+            `;
+            chartContainer.appendChild(col);
+        });
+    }
+    renderTasks();
+</script>
+</body>
+</html>
